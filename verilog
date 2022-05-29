@@ -1,0 +1,183 @@
+   alu_4bit alu4(.a(a),.b(b),.Cin(Cin),.s0(s0),.s1(s1),.Cout(Cout),.S(S));
+  
+  
+  initial 
+    begin
+            $dumpfile("simulation.vcd");
+            $dumpvars(1);
+            
+             a=4'b0011;
+            b=4'b0001; 
+            s0 = 1'b1;
+            s1 = 1'b0;
+           Cin=1'b0;
+          
+            
+           $stop ;
+      end 
+endmodule
+
+module rip_fas_tb();
+  reg  [3:0]A;
+  reg [3:0] B ;
+  reg Cin;
+  reg s_op;
+  wire [3:0] s;
+  wire Cout;
+  parameter delay = 20;
+     Adder4Bit fal (.a(A),.b(B),.Cin(Cin),.S_op(s_op),.S(s), .Cout(Cout));
+  
+  initial 
+      begin	
+          $dumpfile("simulation.vcd");
+          $dumpvars(1);
+ 
+        A=4'b0001;
+        B=4'b0001;
+        s_op=1'b0;
+        Cin=1'b0;
+          $stop ;
+      end 
+endmodule
+
+`timescale 1ns/1ns
+module or2_1bit(a,b,c);
+  input a,b;
+  output c;
+  wire ab_;
+  nor2_1bit nor1(.a(a),.b(b),.c(ab_));
+  nor2_1bit nor2(.a(ab_),.b(ab_),.c(c));
+  
+endmodule
+
+`timescale 1ns/1ns
+module not1_1bit(a,c);
+  input a;
+  output c;
+  nor2_1bit nor1(.a(a),.b(a),.c(c));
+endmodule
+
+
+`timescale 1ns/1ns
+module xor2_1bit(a,b,c);
+  input a,b;
+  output c;
+  parameter Tpd = 4;
+  assign #(Tpd) c = a^b;
+endmodule
+
+
+ and2_1bit and1(.a(a),.b(b),.c(T0));
+  nor2_1bit nor1(.a(T0),.b(T0),.c(T1));
+  nor2_1bit nor2(.a(a),.b(b),.c(T2)); 
+  fulladder1b fa1(.a(a),.b(b),.Cin(Cin),.S_op(s1),.Cout(Cout),.S(T4));
+  mux4_1 mux0(.Z(S),.D0(T1),.D1(T2),.D2(T4),.D3(T4),.S0(s0),.S1(s1));
+  endmodule
+  
+  module alu_4bit(a,b,Cin,s0,s1,Cout,S);
+  input [3:0] a;
+  input [3:0] b;
+  input Cin;
+  input s0,s1;
+  output [3:0]S;
+  output Cout;
+  wire T0,T1,T2;
+  alu_1bit alu0(.a(a[0]),.b(b[0]),.Cin(s1),.s0(s0),.s1(s1),.Cout(T0),.S(S[0]));
+  alu_1bit alu1(.a(a[1]),.b(b[1]),.Cin(T0),.s0(s0),.s1(s1),.Cout(T1),.S(S[1]));
+  alu_1bit alu2(.a(a[2]),.b(b[2]),.Cin(T1),.s0(s0),.s1(s1),.Cout(T2),.S(S[2]));
+  alu_1bit alu3(.a(a[3]),.b(b[3]),.Cin(T2),.s0(s0),.s1(s1),.Cout(Cout),.S(S[3]));
+  endmodule
+  
+    and2_1bit and1(.a(T1),.b(Cin),.c(T3));
+  nor2_1bit nor0(.a(T3),.b(T2),.c(T4));
+  nor2_1bit nor1(.a(T4),.b(T4),.c(Cout));
+endmodule
+
+module Adder4Bit(a,b,Cin,S_op,Cout,S);
+input [3:0]a,b;
+input Cin;
+input S_op;
+output [3:0]S;
+output Cout;
+wire T0,T1,T2;
+
+  
+  fulladder1b f0(.a(a[0]),.b(b[0]), .Cin(Cin),.S_op(S_op),.S(S[0]),.Cout(T0));
+  fulladder1b f1(.a(a[1]),.b(b[1]), .Cin(T0),.S_op(S_op),.S(S[1]),.Cout(T1));
+  fulladder1b f2(.a(a[2]),.b(b[2]), .Cin(T1),.S_op(S_op),.S(S[2]),.Cout(T2));
+  fulladder1b f3(.a(a[3]),.b(b[3]), .Cin(T2),.S_op(S_op),.S(S[3]),.Cout(Cout));
+endmodule
+
+`timescale 1ns/1ns
+module mux2_1(Z, D0, D1, S);
+  input D0, D1, S;
+  output Z;
+  wire T1, T2,T3, SGAG;
+  
+  
+nor2_1bit nor1(.a(S),.b(S),.c(SGAG));
+and2_1bit and1(.a(D0),.b(SGAG),.c(T1));
+and2_1bit and2(.a(D1),.b(S),.c(T2));
+nor2_1bit nor2(.a(T1),.b(T2),.c(T3));
+nor2_1bit nor3(.a(T3),.b(T3),.c(Z));
+
+endmodule
+
+module mux4_1(Z, D0, D1, D2,D3 ,S0,S1);
+  output Z; 
+  input D0, D1, D2,D3, S0,S1;
+  
+  wire mux1,mux2;
+  
+  mux2_1 mux_1(mux1,D0,D1,S0);
+  mux2_1 mux_2(mux2,D2,D3,S0);
+  mux2_1 mux_3(Z,mux1,mux2,S1);
+  
+endmodule
+
+
+module mux4_tb();
+
+wire  out;
+reg  d0;
+reg  d1;
+reg  d2;
+reg  d3;
+reg s0, s1;
+
+mux4_1 mux1(.Z(out), .D0(d0), .D1(d1), .D2(d2), .D3(d3), .S0(s0), .S1(s1));
+ initial
+ begin
+   $dumpfile("simulation.vcd");
+    $dumpvars(1);
+
+ d0=1; d1=0; d2=0; d3=0; s0=0; s1=0; #30;
+ d0=1; d1=0; d2=1; d3=1; s0=0; s1=1; #30;
+ d0=0; d1=0; d2=1; d3=0; s0=1; s1=0; #30;
+ d0=1; d1=1; d2=1; d3=0; s0=1; s1=1; #30;
+ $stop;
+end
+
+always@(d0 or d1 or d2 or d3 or s0 or s1) 
+$monitor("At time = %t, Output = %d", $time, out);
+
+endmodule
+
+`timescale 1ns/1ns
+module nor2_1bit(a,b,c);
+  input a,b;
+  output c;
+  parameter Tpd = 8;
+  assign #(Tpd) c = ~(a|b);
+endmodule
+
+`timescale 1ns/1ns
+module and2_1bit(a,b,c);
+  input a,b;
+  output c;
+  parameter Tpd = 2;
+  assign #(Tpd) c = a&b;
+endmodule
+
+
+
