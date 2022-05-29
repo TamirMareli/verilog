@@ -272,5 +272,86 @@ module alu_4bit_tb();
            $stop ;
       end 
 endmodule
+-----------------------------------------------
+module alu_1bit(a,b,Cin,op,Cout,S);
+  input a,b,Cin;
+  input [1:0] op;
+  output Cout,S;
+  reg sR,cR;
+  wire T0,T1,T2,Rs0,Rs1,Rc0,Rc1;
+  
+  and2_1bit and1(.a(a),.b(b),.c(T0));
+  nor2_1bit nor1(.a(T0),.b(T0),.c(T1));
+  nor2_1bit nor2(.a(a),.b(b),.c(T2)); 
+  fulladder1b fa1(.a(a),.b(b),.Cin(Cin),.S_op(1'b0),.Cout(Rc0),.S(Rs0));
+  fulladder1b fa2(.a(a),.b(b),.Cin(Cin),.S_op(1'b1),.Cout(Rc1),.S(Rs1));
+  
+    always@(*)
+      case(op)
+        2'b00: sR = T1;
+        
+        2'b01: sR = T2;
+        
+        2'b10: begin
+          sR=Rs0; cR=Rc0;
+        end
+        
+        2'b11: begin
+          sR=Rs1; cR=Rc1; 
+        end
+        
+        default:begin
+          sR=1'bz; cR=1'bz;
+        end
+      endcase
+  
+ 	  assign S= sR;
+      assign Cout=cR;
+  
+  endmodule 
+
+  
+module alu_4bit(a,b,Cin,op,Cout,S);
+  input [3:0] a;
+  input [3:0] b;
+  input Cin;
+  input [1:0] op;
+  output [3:0]S;
+  output Cout;
+  wire T0,T1,T2;
+    alu_1bit alu0(.a(a[0]),.b(b[0]),.Cin(Cin),.op(op),.Cout(T0),.S(S[0]));
+    alu_1bit alu1(.a(a[1]),.b(b[1]),.Cin(T0),.op(op),.Cout(T1),.S(S[1]));
+    alu_1bit alu2(.a(a[2]),.b(b[2]),.Cin(T1),.op(op),.Cout(T2),.S(S[2]));
+    alu_1bit alu3(.a(a[3]),.b(b[3]),.Cin(T2),.op(op),.Cout(Cout),.S(S[3]));
+  endmodule
+  
+  module alu_4bit_tb();
+  reg  [3:0]a;
+  reg [3:0] b;
+  reg cin;
+  reg [1:0]op;
+  wire [3:0] s;
+  wire cout;
+  
+  alu_4bit alu5(.a(a),.b(b),.Cin(cin),.op(op),.Cout(cout),.S(s));
+  
+  
+  initial 
+		begin
+          	$dumpfile("simulation.vcd");
+            $dumpvars(1);
+ 		    a=4'b0011;
+            b=4'b0001;
+            op = 2'b10;
+            cin=0; #150;
+          	cin=1;
+            op=2'b11; #150;
+          	op=2'b00; #150;
+          	op=2'b01; #150;
+          
+           $stop ;
+      end 
+endmodule
+  --------------------------------------------------------
 
 
